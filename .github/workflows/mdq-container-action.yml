@@ -1,6 +1,6 @@
 on:
   issues: 
-    types: [opened]
+    types: [opened, reopened]
   discussion: 
     types: [created]
 
@@ -29,7 +29,7 @@ jobs:
         env:
           BODY: ${{ needs.get_body.outputs.body }}
         run: |
-          JSON=$(echo "$BODY" | base64 -d | /mdq --output json '# I have searched | - [?] Yes')
+          JSON=$(echo $BODY | base64 -d | /mdq --output json '# I have searched | - [?] Yes')
           echo "json=$JSON" >> $GITHUB_OUTPUT
 
   post_comment:
