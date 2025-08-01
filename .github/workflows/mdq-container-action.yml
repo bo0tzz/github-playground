@@ -12,7 +12,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         id: get-body
         run: |
-          BODY=$(gh api -X GET "/repos/immich-app/immich/discussions/20526" | jq '.body' -r | base64)
+          BODY=$(gh api -X GET "/repos/immich-app/immich/discussions/20526" | jq '.body' -r | base64 -w 0)
           echo "body=$BODY" >> $GITHUB_OUTPUT
 
   mdq:
