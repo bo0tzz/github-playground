@@ -1,0 +1,37 @@
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  get_body:
+    runs-on: ubuntu-latest
+    outputs:
+      body: ${{ steps.get-body.outputs.body }}
+    steps:
+      - id: get-body
+        run: |
+          BODY=$(gh api -X GET "/repos/immich-app/immich/discussions/20526" | jq '.body' -r)
+          echo "body=$BODY" >> $GITHUB_OUTPUT
+
+  mdq:
+    runs-on: ubuntu-latest
+    needs: get_body
+    container:
+      image: yshavit/mdq:v0.7.2
+    outputs:
+      json: ${{ steps.mdq.outputs.res }}
+    steps:
+      - id: mdq
+        env:
+          BODY: ${{ needs.get_body.outputs.body }}
+        run: |
+          RES=$(echo $BODY | mdq --output json '# I have searched | - [?] Yes')
+          echo "res=$RES" >> $GITHUB_OUTPUT
+
+  jq:  
+    runs-on: ubuntu-latest
+    needs: mdq
+    steps:
+      - env:
+          JSON: ${{ needs.mdq.outputs.json }}
+        run: echo $JSON | jq '.items.[0].list[0].checked'
