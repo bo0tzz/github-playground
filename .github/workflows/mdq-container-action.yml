@@ -14,7 +14,7 @@ jobs:
     steps:
       - id: get_body
         run: |
-          BODY=$(echo '$EVENT' | jq -r '.issue // .discussion | .body' | base64 -w 0)
+          BODY=$(echo $EVENT | jq -r '.issue // .discussion | .body' | base64 -w 0)
           echo "body=$BODY" >> $GITHUB_OUTPUT
   
   get_checkbox_json:
