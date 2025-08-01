@@ -1,39 +1,40 @@
 on:
-  push:
-  workflow_dispatch:
+  issues: 
+    types: [opened]
+  discussion: 
+    types: [created]
 
 jobs:
   get_body:
     runs-on: ubuntu-latest
+    env:
+      EVENT: ${{ toJSON(github.event) }}
     outputs:
-      body: ${{ steps.get-body.outputs.body }}
+      body: ${{ steps.get_body.outputs.body }}
     steps:
-      - env:
-          GH_TOKEN: ${{ github.token }}
-        id: get-body
+      - id: get_body
         run: |
-          BODY=$(gh api -X GET "/repos/immich-app/immich/discussions/20526" | jq '.body' -r | base64 -w 0)
+          BODY=$(echo $EVENT | jq '.issue // .discussion | .body' | base64 -w 0)
           echo "body=$BODY" >> $GITHUB_OUTPUT
-
-  mdq:
+  
+  get_checkbox_json:
     runs-on: ubuntu-latest
     needs: get_body
-    # container:
-    #   image: yshavit/mdq:0.7.2
+    container:
+      image: yshavit/mdq:0.7.2
     outputs:
-      json: ${{ steps.mdq.outputs.res }}
+      json: ${{ steps.get_checkbox.outputs.json }}
     steps:
-      - id: mdq
+      - id: get_checkbox
         env:
           BODY: ${{ needs.get_body.outputs.body }}
         run: |
-          RES=$(echo $BODY | base64 -d | mdq --output json '# I have searched | - [?] Yes')
-          echo "res=$RES" >> $GITHUB_OUTPUT
+          JSON=$(echo "$BODY" | base64 -d | /mdq --output json '# I have searched | - [?] Yes')
+          echo "json=$JSON" >> $GITHUB_OUTPUT
 
-  jq:  
+  post_comment:
     runs-on: ubuntu-latest
-    needs: mdq
+    needs: get_checkbox_json
+    if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items.[0].list[0].checked }}
     steps:
-      - env:
-          JSON: ${{ needs.mdq.outputs.json }}
-        run: echo $JSON | jq '.items.[0].list[0].checked'
+      - run: echo 'bad'
