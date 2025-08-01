@@ -5,8 +5,21 @@ on:
     types: [created]
 
 jobs:
+  get_body:
+    runs-on: ubuntu-latest
+    env:
+      EVENT: ${{ toJSON(github.event) }}
+    outputs:
+      body: ${{ steps.get_body.outputs.body }}
+    steps:
+      - id: get_body
+        run: |
+          BODY=$(echo '$EVENT' | jq -r '.issue // .discussion | .body' | base64 -w 0)
+          echo "body=$BODY" >> $GITHUB_OUTPUT
+  
   get_checkbox_json:
     runs-on: ubuntu-latest
+    needs: get_body
     container:
       image: yshavit/mdq:0.7.2
     outputs:
@@ -14,9 +27,9 @@ jobs:
     steps:
       - id: get_checkbox
         env:
-          BODY: ${{ github.event.*.body }}
+          BODY: ${{ needs.get_body.outputs.body }}
         run: |
-          JSON=$(echo "$BODY" | /mdq --output json '# I have searched | - [?] Yes')
+          JSON=$(echo "$BODY" | base64 -d | /mdq --output json '# I have searched | - [?] Yes')
           echo "json=$JSON" >> $GITHUB_OUTPUT
 
   post_comment:
