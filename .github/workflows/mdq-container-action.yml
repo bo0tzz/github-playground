@@ -27,7 +27,7 @@ jobs:
         env:
           BODY: ${{ needs.get_body.outputs.body }}
         run: |
-          RES=$(echo $BODY | base64 -d | mdq --output json '# I have searched | - [?] Yes')
+          RES=$(echo $BODY | base64 -d | ./mdq --output json '# I have searched | - [?] Yes')
           echo "res=$RES" >> $GITHUB_OUTPUT
 
   jq:  
