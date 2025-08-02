@@ -41,6 +41,9 @@ jobs:
     needs: get_checkbox_json
     if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items[0].list[0].checked }}
     steps:
+      - name: Debug
+        run: echo ${{ toJSON(github.event) }}
+      
       - name: Close issue
         if: ${{ github.event_name == 'issues' }}
         env:
