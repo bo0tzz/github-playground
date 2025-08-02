@@ -4,6 +4,10 @@ on:
   discussion: 
     types: [created]
 
+permissions:
+  issues: write
+  discussions: write
+
 jobs:
   get_body:
     runs-on: ubuntu-latest
@@ -32,9 +36,61 @@ jobs:
           JSON=$(echo "$BODY" | base64 -d | /mdq --output json '# I have searched | - [?] Yes')
           echo "json=$JSON" >> $GITHUB_OUTPUT
 
-  post_comment:
+  close_and_comment:
     runs-on: ubuntu-latest
     needs: get_checkbox_json
     if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items[0].list[0].checked }}
     steps:
-      - run: echo 'bad'
+      - id: close-issue
+        if: ${{ github.event_name == "issue" }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          gh api graphql \
+            -f issueId="$NODE_ID" \
+            -f body="This issue has automatically been closed as it is likely a duplicate. We get up to ten duplicate threads each day, which is why we ask you in the template to confirm that you searched for duplicates before opening one." \
+            -f query='
+              mutation CommentAndCloseIssue($issueId: ID!, $body: String!) {
+                addComment(input: {
+                  subjectId: $issueId, 
+                  body: $body
+                }) {
+                  __typename
+                }
+              
+                closeIssue(input: {
+                  issueId: $issueId,
+                  stateReason: DUPLICATE
+                }) {
+                  __typename
+                }
+              }'
+              
+      - id: close-discussion
+        if: ${{ github.event_name == "discussion" }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_ID: ${{ github.event.discussion.node_id }}
+        run: |
+          gh api graphql \
+            -f issueId="$NODE_ID" \
+            -f body="This discussion has automatically been closed as it is likely a duplicate. We get up to ten duplicate threads each day, which is why we ask you in the template to confirm that you searched for duplicates before opening one." \
+            -f query='
+              mutation CommentAndCloseDiscussion($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {
+                  discussionId: $discussionId,
+                  body: $body
+                }) {
+                  __typename
+                }
+              
+                updateDiscussion(input: {
+                  discussionId: $discussionId,
+                  closed: true,
+                  reason: DUPLICATE
+                }) {
+                  __typename
+                }
+              }'
+        
