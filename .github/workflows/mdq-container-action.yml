@@ -42,7 +42,7 @@ jobs:
     if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items[0].list[0].checked }}
     steps:
       - id: close-issue
-        if: ${{ github.event_name == "issue" }}
+        if: ${{ github.event_name == 'issue' }}
         env:
           GH_TOKEN: ${{ github.token }}
           NODE_ID: ${{ github.event.issue.node_id }}
@@ -68,7 +68,7 @@ jobs:
               }'
               
       - id: close-discussion
-        if: ${{ github.event_name == "discussion" }}
+        if: ${{ github.event_name == 'discussion' }}
         env:
           GH_TOKEN: ${{ github.token }}
           NODE_ID: ${{ github.event.discussion.node_id }}
