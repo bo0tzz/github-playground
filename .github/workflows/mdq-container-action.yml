@@ -76,9 +76,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           NODE_ID: ${{ github.event.discussion.node_id }}
         run: |
-          echo "$NODE_ID"
           gh api graphql \
-            -f issueId="$NODE_ID" \
+            -f discussionId="$NODE_ID" \
             -f body="This discussion has automatically been closed as it is likely a duplicate. We get a lot of duplicate threads each day, which is why we ask you in the template to confirm that you searched for duplicates before opening one." \
             -f query='
               mutation CommentAndCloseDiscussion($discussionId: ID!, $body: String!) {
