@@ -12,7 +12,7 @@ body:
       label: I have searched the existing feature requests to make sure this is not a duplicate request.
       options:
         - label: "Yes"
-          required: true
+          required: false
   
   - type: textarea
     id: feature
