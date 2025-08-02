@@ -41,8 +41,8 @@ jobs:
     needs: get_checkbox_json
     if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items[0].list[0].checked }}
     steps:
-      - id: close-issue
-        if: ${{ github.event_name == 'issue' }}
+      - name: Close issue
+        if: ${{ github.event_name == 'issues' }}
         env:
           GH_TOKEN: ${{ github.token }}
           NODE_ID: ${{ github.event.issue.node_id }}
@@ -67,8 +67,8 @@ jobs:
                 }
               }'
               
-      - id: close-discussion
-        if: ${{ github.event_name == 'discussion' }}
+      - name: Close discussion
+        if: ${{ github.event_name == 'discussion' && github.event.discussion.category.name == 'Feature Request' }}
         env:
           GH_TOKEN: ${{ github.token }}
           NODE_ID: ${{ github.event.discussion.node_id }}
@@ -85,9 +85,8 @@ jobs:
                   __typename
                 }
               
-                updateDiscussion(input: {
+                closeDiscussion(input: {
                   discussionId: $discussionId,
-                  closed: true,
                   reason: DUPLICATE
                 }) {
                   __typename
