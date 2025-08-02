@@ -18,7 +18,7 @@ jobs:
     steps:
       - id: get_body
         run: |
-          BODY=$(echo $EVENT | jq -r '.issue // .discussion | .body' | base64 -w 0)
+          BODY=$(echo """$EVENT""" | jq -r '.issue // .discussion | .body' | base64 -w 0)
           echo "body=$BODY" >> $GITHUB_OUTPUT
   
   get_checkbox_json:
@@ -42,7 +42,7 @@ jobs:
     if: ${{ !fromJSON(needs.get_checkbox_json.outputs.json).items[0].list[0].checked }}
     steps:
       - name: Debug
-        run: echo ${{ toJSON(github.event) }}
+        run: echo """${{ toJSON(github.event) }}"""
       
       - name: Close issue
         if: ${{ github.event_name == 'issues' }}
