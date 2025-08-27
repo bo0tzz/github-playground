@@ -11,7 +11,7 @@ jobs:
   should_run:
     runs-on: ubuntu-latest
     outputs:
-      should_run: ${{ steps.should_run.outputs.run }}
+      should_run: ${{ steps.should_run.outputs.run == 'true' }}
     steps:
       - id: should_run
         run: echo "run=${{ github.event.issue || github.event.discussion.category.name == 'Feature Request' }}" >> $GITHUB_OUTPUT
