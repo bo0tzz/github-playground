@@ -11,10 +11,7 @@ jobs:
   should_run:
     runs-on: ubuntu-latest
     outputs:
-      should_run: ${{ steps.should_run.outputs.run }}
-    steps:
-      - id: should_run
-        run: echo "run=${{ github.event_name == 'issues' || github.event.discussion.category.name == 'Feature Request' }}" >> $GITHUB_OUTPUT
+      should_run: ${{ github.event_name == 'issues' || github.event.discussion.category.name == 'Feature Request' }}
   
   get_body:
     runs-on: ubuntu-latest
