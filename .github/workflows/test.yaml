@@ -2,32 +2,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  matrixed:
+  fail:
     runs-on: ubuntu-latest
+    continue-on-error: true
     outputs:
-      ${{ matrix.id }}: ${{ steps.step.outputs.out }}
-    strategy:
-      matrix:
-        include:
-          - id: 4
-            x: 1
-            y: 4
-          - id: 18
-            x: 3
-            y: 6
-          - id: 8
-            x: 2
-            y: 4
+      foo: ${{ steps.step.outputs.out }}
     steps:
       - id: step
         run: |
-          x=${{ matrix.x }}
-          y=${{ matrix.y }}
+          x=2
+          y=7
           echo "out=($x,$y)" >> $GITHUB_OUTPUT
+          exit 1
 
   finish:
     runs-on: ubuntu-latest
-    needs: matrixed
+    needs: fail
     steps:
       - run: |
           cat <<EOF
