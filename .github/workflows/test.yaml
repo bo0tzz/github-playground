@@ -17,7 +17,7 @@ jobs:
 
   mid:
     runs-on: ubuntu-latest
-    if: ${{ needs.fail.result == 'skipped' || needs.fail.result == 'success' }}
+    if: always()
     needs: fail
     steps:
       - run: |
