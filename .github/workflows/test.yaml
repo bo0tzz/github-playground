@@ -4,7 +4,7 @@ on:
 jobs:
   fail:
     runs-on: ubuntu-latest
-    continue-on-error: true
+    if: false
     outputs:
       foo: ${{ steps.step.outputs.out }}
     steps:
