@@ -1,10 +1,15 @@
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      skip:
+        required: false
+        type: boolean
 
 jobs:
   fail:
     runs-on: ubuntu-latest
-    if: false
+    if: ${{ inputs.skip != true }}
     outputs:
       foo: ${{ steps.step.outputs.out }}
     steps:
@@ -17,7 +22,7 @@ jobs:
 
   mid:
     runs-on: ubuntu-latest
-    if: always()
+    if: ${{ inputs.skip != true }}
     needs: fail
     steps:
       - run: |
