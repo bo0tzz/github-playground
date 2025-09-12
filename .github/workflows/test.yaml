@@ -9,29 +9,21 @@ on:
 jobs:
   fail:
     runs-on: ubuntu-latest
-    if: ${{ inputs.skip != true }}
     outputs:
       foo: ${{ steps.step.outputs.out }}
     steps:
       - id: step
+        if: ${{ inputs.skip != true }}
         run: |
           x=2
           y=7
           echo "out=($x,$y)" >> $GITHUB_OUTPUT
           exit 1
 
-  mid:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.skip != true }}
-    needs: fail
-    steps:
-      - run: |
+      - if: ${{ inputs.skip != true }}
+        run: |
           cat <<EOF
-          ${{ toJson(needs) }}
+          ${{ toJson(steps.step) }}
           EOF
-
-  finish:
-    runs-on: ubuntu-latest
-    needs: mid
-    steps:
+      
       - run: echo 'done'
