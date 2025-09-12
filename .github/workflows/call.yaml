@@ -1,0 +1,14 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  call:
+    uses: ./.github/workflows/test.yaml
+    with:
+      skip: true
+  
+  finish:
+    runs-on: ubuntu-latest
+    needs: [call]
+    steps:
+      - run: echo 'finished'
