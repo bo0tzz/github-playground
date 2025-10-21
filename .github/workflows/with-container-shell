@@ -1,0 +1,10 @@
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+steps:
+  - run: echo 'hello world'
+  - uses: docker://ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    shell: uv run {0}
+    run: print('hello world from python')
