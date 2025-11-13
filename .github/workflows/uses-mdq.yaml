@@ -12,4 +12,4 @@ jobs:
         uses: docker://ghcr.io/immich-app/mdq:main@sha256:9c905a4ff69f00c4b2f98b40b6090ab3ab18d1a15ed1379733b8691aa1fcb271
         with:
           entrypoint: /mdq
-          args: # README.md --output json
+          args: \# README.md --output json
