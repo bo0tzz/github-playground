@@ -13,3 +13,5 @@ jobs:
         with:
           entrypoint: /bin/sh
           args: -c "/mdq '#' README.md --output json | jq '.items[0].section.title' -r"
+
+      - run: echo ${{ toJSON(steps) }}
