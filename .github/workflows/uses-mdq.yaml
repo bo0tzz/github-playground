@@ -6,7 +6,7 @@ jobs:
   parse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       
       - name: mdq
         uses: docker://ghcr.io/immich-app/mdq:main@sha256:9c905a4ff69f00c4b2f98b40b6090ab3ab18d1a15ed1379733b8691aa1fcb271
