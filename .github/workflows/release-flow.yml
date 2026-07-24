@@ -1,0 +1,119 @@
+name: release-flow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
+        type: string
+      target:
+        description: 'Target commitish (branch or SHA) for the tag'
+        required: false
+        default: main
+        type: string
+      prerelease:
+        description: 'Mark as a prerelease (never becomes latest)'
+        type: boolean
+        default: false
+      latest:
+        description: 'Latest-pointer decision'
+        type: choice
+        options:
+          - auto
+          - 'true'
+          - 'false'
+        default: auto
+      previous_tag:
+        description: 'Baseline tag for auto-generated notes (blank = let GitHub pick)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  prepare:
+    name: Prepare draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      make_latest: ${{ steps.decide.outputs.make_latest }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      VERSION: ${{ inputs.version }}
+      TARGET: ${{ inputs.target }}
+      PRERELEASE: ${{ inputs.prerelease }}
+      LATEST: ${{ inputs.latest }}
+      PREV_TAG: ${{ inputs.previous_tag }}
+    steps:
+      - name: Create draft release
+        run: |
+          args=(--draft --target "$TARGET" --title "$VERSION" --generate-notes)
+          [ "$PRERELEASE" = "true" ] && args+=(--prerelease)
+          [ -n "$PREV_TAG" ] && args+=(--notes-start-tag "$PREV_TAG")
+          gh release create "$VERSION" --repo "$REPO" "${args[@]}"
+
+      - name: Decide latest pointer
+        id: decide
+        run: |
+          if [ "$PRERELEASE" = "true" ]; then
+            MAKE_LATEST=false
+            REASON="prerelease — can never be latest"
+          elif [ "$LATEST" != "auto" ]; then
+            MAKE_LATEST="$LATEST"
+            REASON="manual override"
+          else
+            NEWVER="${VERSION#v}"
+            TOP=$( { gh api "repos/$REPO/releases" --paginate \
+                       --jq '.[] | select(.draft==false and .prerelease==false) | .tag_name'; \
+                     echo "$VERSION"; } | sed 's/^v//' | sort -V | tail -1 )
+            if [ "$TOP" = "$NEWVER" ]; then
+              MAKE_LATEST=true
+              REASON="auto — $VERSION is the highest published release"
+            else
+              MAKE_LATEST=false
+              REASON="auto — old-line patch; highest published release is v$TOP"
+            fi
+          fi
+          echo "make_latest=$MAKE_LATEST" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Draft prepared: \`$VERSION\`"
+            echo ""
+            echo "| setting | value |"
+            echo "| --- | --- |"
+            echo "| target | \`$TARGET\` |"
+            echo "| prerelease | $PRERELEASE |"
+            echo "| **make_latest at publish** | **$MAKE_LATEST** |"
+            echo "| reason | $REASON |"
+            echo "| notes baseline | ${PREV_TAG:-_auto_} |"
+            echo ""
+            echo "Approve the **publish** environment to publish this release."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish (gated)
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      VERSION: ${{ inputs.version }}
+      MAKE_LATEST: ${{ needs.prepare.outputs.make_latest }}
+    steps:
+      - name: Publish the draft with explicit latest
+        run: |
+          gh release edit "$VERSION" --repo "$REPO" --draft=false --latest="$MAKE_LATEST"
+
+      - name: Report resulting latest pointer
+        run: |
+          POINTER=$(gh api "repos/$REPO/releases/latest" --jq .tag_name 2>/dev/null || echo "(none)")
+          {
+            echo "### Published \`$VERSION\`"
+            echo ""
+            echo "- requested make_latest: **$MAKE_LATEST**"
+            echo "- repo latest pointer now: **$POINTER**"
+          } >> "$GITHUB_STEP_SUMMARY"
