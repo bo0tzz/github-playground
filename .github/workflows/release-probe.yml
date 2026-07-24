@@ -2,7 +2,7 @@ name: release-probe
 on:
   workflow_dispatch:
   release:
-    types: [created, edited, published, released, prereleased, unpublished, deleted]
+    types: [published, released, prereleased, created]
 
 jobs:
   probe:
