@@ -1,0 +1,13 @@
+name: Push before
+on:
+  push:
+    branches: ['zzz-*']
+permissions: {}
+jobs:
+  show:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BEFORE: ${{ github.event.before }}
+          CREATED: ${{ github.event.created }}
+        run: echo "before=${BEFORE} created=${CREATED}"
