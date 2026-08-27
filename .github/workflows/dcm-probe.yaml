@@ -1,0 +1,49 @@
+name: dcm-probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Network reachability of dcm.dev
+        run: |
+          echo "egress ip: $(curl -sS --max-time 10 https://api.ipify.org)"
+          curl -sS -o /dev/null -w 'GET  /                          -> %{http_code} (%{remote_ip})\n' --max-time 15 https://dcm.dev/ || echo "GET / failed: $?"
+          for path in verify-oss-v2 verify-free-license verify-ci-v2 activate-free-license; do
+            curl -sS -o /dev/null -w "POST /api/license/$path -> %{http_code}\n" --max-time 15 \
+              -X POST -H 'content-type: application/json' -d '{}' "https://dcm.dev/api/license/$path" || echo "POST $path failed: $?"
+          done
+
+      - name: Install dcm 1.39.1
+        run: |
+          curl -sSL -o dcm.zip https://github.com/CQLabs/homebrew-dcm/releases/download/1.39.1/dcm-linux-x64-release.zip
+          unzip -q dcm.zip -d "$RUNNER_TEMP/dcmdir"
+          chmod +x "$RUNNER_TEMP/dcmdir/dcm"
+          "$RUNNER_TEMP/dcmdir/dcm" --version
+
+      - name: Checkout immich
+        uses: actions/checkout@v5
+        with:
+          repository: immich-app/immich
+          fetch-depth: 1
+          persist-credentials: false
+          path: immich
+
+      - name: dcm analyze in immich/mobile (expect license verification to pass)
+        working-directory: immich/mobile
+        run: |
+          set +e
+          "$RUNNER_TEMP/dcmdir/dcm" analyze lib --verbose 2>&1 | head -40
+          echo "exit=${PIPESTATUS[0]}"
+
+      - name: dcm analyze in an unlicensed scratch project (control, expect failure)
+        run: |
+          mkdir -p "$RUNNER_TEMP/scratch/lib" && cd "$RUNNER_TEMP/scratch"
+          git init -q . && git remote add origin https://github.com/someuser/some-random-repo.git
+          printf 'name: scratch\nenvironment:\n  sdk: ">=3.5.0 <4.0.0"\n' > pubspec.yaml
+          echo 'void main() {}' > lib/main.dart
+          set +e
+          "$RUNNER_TEMP/dcmdir/dcm" analyze lib 2>&1 | head -5
+          echo "exit=${PIPESTATUS[0]}"
