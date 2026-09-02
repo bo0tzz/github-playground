@@ -6,10 +6,10 @@ jobs:
   parse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       
       - name: mdq
-        uses: docker://ghcr.io/immich-app/mdq:main@sha256:9c905a4ff69f00c4b2f98b40b6090ab3ab18d1a15ed1379733b8691aa1fcb271
+        uses: docker://ghcr.io/immich-app/mdq:main@sha256:ef9eab1055b07aed9111b6dd3f0d70e1b2e08c862d982d4f4560d6353c9e2b9d
         with:
           entrypoint: /bin/sh
           args: -c "/mdq '#' README.md --output json | jq '.items[0].section.title' -r"
