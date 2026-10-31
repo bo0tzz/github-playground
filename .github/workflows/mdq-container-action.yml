@@ -32,7 +32,7 @@ jobs:
     needs: [get_body, should_run]
     if: ${{ needs.should_run.outputs.should_run == 'true' }}
     container:
-      image: yshavit/mdq:0.8.1@sha256:asdf
+      image: yshavit/mdq:0.10.0@sha256:a7e958222b1bd3a4dcaebc8c9208460d7a5f738f1d123e8d425ceb08899a83d8
     outputs:
       json: ${{ steps.get_checkbox.outputs.json }}
     steps:
